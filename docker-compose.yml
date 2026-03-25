@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: verb_reader_api
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres123
+      - DB_NAME=verb_reader
+      - DATABASE_URL=postgresql://postgres:postgres123@postgres:5432/verb_reader
+      - JWT_SECRET=3f8a2b1c9d4e7f6a0b5c8d2e1f4a7b3c6d9e2f5a8b1c4d7e0f3a6b9c2d5e8f1
+      - JWT_EXPIRES_IN=7d
+      - CHOKIDAR_USEPOLLING=1
+      - CHOKIDAR_INTERVAL=1000
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run start:dev
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: verb_reader_postgres
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: verb_reader
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
